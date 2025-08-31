@@ -159,15 +159,33 @@ This project implements a simple API for managing users and todos, demonstrating
 
 ## 🧪 Testing
 
-This project uses [Testcontainers](https://rust.testcontainers.org/) for integration testing. The tests will spin up a PostgreSQL container, run migrations, and then run the API tests against a real database instance.
+This project uses a combination of unit and integration tests.
 
-### Prerequisites
+### Running All Tests
 
--   Docker must be installed and running.
+To run all tests (unit and integration), use the following command:
 
-### Running the Tests
+```bash
+cargo test
+```
 
-To run the tests, use the following command:
+### Running Unit Tests
+
+To run only the unit tests, you can use:
+
+```bash
+cargo test --lib
+```
+*Note: Currently, there are no unit tests in the `src/lib.rs` file.*
+
+### Running Integration Tests
+
+The integration tests use [Testcontainers](https://rust.testcontainers.org/) to spin up a real PostgreSQL database.
+
+**Prerequisites:**
+- Docker must be installed and running.
+
+To run the integration tests (which are located in the `src/tests` directory), you can use the standard test command. Since these are the only tests currently, this will run all tests.
 
 ```bash
 cargo test

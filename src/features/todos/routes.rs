@@ -1,7 +1,7 @@
 use super::handlers::{create_todo, delete_todo, get_todo, get_todos, update_todo};
 use crate::app_state::AppState;
 use axum::{
-    routing::{get, post, put, delete},
+    routing::{get, post},
     Router,
 };
 
