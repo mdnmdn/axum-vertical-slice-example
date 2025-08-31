@@ -1,0 +1,16 @@
+    Updating crates.io index
+     Locking 13 packages to latest compatible versions
+      Adding anstream v0.6.20
+      Adding anstyle v1.0.11
+      Adding anstyle-parse v0.2.7
+      Adding anstyle-query v1.1.4
+      Adding anstyle-wincon v3.0.10
+      Adding clap v4.5.46
+      Adding clap_builder v4.5.46
+      Adding clap_derive v4.5.45
+      Adding clap_lex v0.7.5
+      Adding colorchoice v1.0.4
+      Adding is_terminal_polyfill v1.70.1
+      Adding once_cell_polyfill v1.70.1
+      Adding utf8parse v0.2.2
+ Downloading crates ...
