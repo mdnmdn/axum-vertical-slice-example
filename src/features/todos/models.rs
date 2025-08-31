@@ -14,13 +14,13 @@ pub struct Todo {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Serialize)]
 pub struct CreateTodoPayload {
     #[validate(length(min = 1))]
     pub title: String,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Serialize)]
 pub struct UpdateTodoPayload {
     #[validate(length(min = 1))]
     pub title: Option<String>,

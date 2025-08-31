@@ -1,11 +1,13 @@
 use app_state::AppState;
 use axum::{routing::get, Router};
 use std::net::SocketAddr;
-use tokio;
 
 mod app_state;
 mod config;
 mod features;
+
+#[cfg(test)]
+mod tests;
 
 use features::{
     health::handler::health_check, todos::routes::todo_routes, users::routes::user_routes,
@@ -24,7 +26,7 @@ async fn main() {
         .with_state(app_state);
 
     let addr: SocketAddr = config.server_addr.parse().unwrap();
-    println!("listening on {}", addr);
+    println!("listening on {addr}");
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

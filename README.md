@@ -157,6 +157,40 @@ This project implements a simple API for managing users and todos, demonstrating
     ```
     The server will start on http://localhost:3000. You can now use a tool like cURL or a REST client to interact with the API.
 
+## 🧪 Testing
+
+This project uses a combination of unit and integration tests.
+
+### Running All Tests
+
+To run all tests (unit and integration), use the following command:
+
+```bash
+cargo test
+```
+
+### Running Unit Tests
+
+To run only the unit tests, you can use:
+
+```bash
+cargo test --lib
+```
+*Note: Currently, there are no unit tests in the `src/lib.rs` file.*
+
+### Running Integration Tests
+
+The integration tests use [Testcontainers](https://rust.testcontainers.org/) to spin up a real PostgreSQL database.
+
+**Prerequisites:**
+- Docker must be installed and running.
+
+To run the integration tests (which are located in the `src/tests` directory), you can use the standard test command. Since these are the only tests currently, this will run all tests.
+
+```bash
+cargo test
+```
+
 ## 📝 OpenAPI Documentation
 
 An OpenAPI specification is automatically generated and served at /api-docs/openapi.json. You can view it with a Swagger UI at `/api-docs/`.
