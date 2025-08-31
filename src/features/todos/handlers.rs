@@ -1,5 +1,5 @@
 use super::models::{CreateTodoPayload, Todo, UpdateTodoPayload};
-use crate::app_state::AppState;
+use crate::{app_state::AppState, error::AppError};
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -10,12 +10,23 @@ use chrono::Utc;
 use uuid::Uuid;
 use validator::Validate;
 
+#[utoipa::path(
+    post,
+    path = "/todos",
+    request_body = CreateTodoPayload,
+    responses(
+        (status = 201, description = "Todo created successfully", body = Todo),
+        (status = 400, description = "Validation error"),
+        (status = 500, description = "Internal server error")
+    ),
+    tag = "Todos"
+)]
 pub async fn create_todo(
     State(state): State<AppState>,
     Json(payload): Json<CreateTodoPayload>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AppError> {
     if let Err(e) = payload.validate() {
-        return (StatusCode::BAD_REQUEST, Json(e)).into_response();
+        return Err(AppError::ValidationError(e.to_string()));
     }
 
     let todo = sqlx::query_as::<_, Todo>(
@@ -31,15 +42,21 @@ pub async fn create_todo(
     .bind(Utc::now())
     .bind(Utc::now())
     .fetch_one(&state.db_pool)
-    .await;
+    .await?;
 
-    match todo {
-        Ok(todo) => (StatusCode::CREATED, Json(todo)).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
-    }
+    Ok((StatusCode::CREATED, Json(todo)))
 }
 
-pub async fn get_todos(State(state): State<AppState>) -> impl IntoResponse {
+#[utoipa::path(
+    get,
+    path = "/todos",
+    responses(
+        (status = 200, description = "List of todos", body = Vec<Todo>),
+        (status = 500, description = "Internal server error")
+    ),
+    tag = "Todos"
+)]
+pub async fn get_todos(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
     let todos = sqlx::query_as::<_, Todo>(
         r#"
         SELECT id, title, completed, created_at, updated_at
@@ -47,15 +64,28 @@ pub async fn get_todos(State(state): State<AppState>) -> impl IntoResponse {
         "#,
     )
     .fetch_all(&state.db_pool)
-    .await;
+    .await?;
 
-    match todos {
-        Ok(todos) => (StatusCode::OK, Json(todos)).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
-    }
+    Ok((StatusCode::OK, Json(todos)))
 }
 
-pub async fn get_todo(State(state): State<AppState>, Path(id): Path<Uuid>) -> impl IntoResponse {
+#[utoipa::path(
+    get,
+    path = "/todos/{id}",
+    params(
+        ("id" = Uuid, Path, description = "Todo id")
+    ),
+    responses(
+        (status = 200, description = "Todo found", body = Todo),
+        (status = 404, description = "Todo not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    tag = "Todos"
+)]
+pub async fn get_todo(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, AppError> {
     let todo = sqlx::query_as::<_, Todo>(
         r#"
         SELECT id, title, completed, created_at, updated_at
@@ -65,22 +95,33 @@ pub async fn get_todo(State(state): State<AppState>, Path(id): Path<Uuid>) -> im
     )
     .bind(id)
     .fetch_one(&state.db_pool)
-    .await;
+    .await?;
 
-    match todo {
-        Ok(todo) => (StatusCode::OK, Json(todo)).into_response(),
-        Err(sqlx::Error::RowNotFound) => (StatusCode::NOT_FOUND).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
-    }
+    Ok((StatusCode::OK, Json(todo)))
 }
 
+#[utoipa::path(
+    put,
+    path = "/todos/{id}",
+    params(
+        ("id" = Uuid, Path, description = "Todo id")
+    ),
+    request_body = UpdateTodoPayload,
+    responses(
+        (status = 200, description = "Todo updated successfully", body = Todo),
+        (status = 400, description = "Validation error"),
+        (status = 404, description = "Todo not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    tag = "Todos"
+)]
 pub async fn update_todo(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
     Json(payload): Json<UpdateTodoPayload>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AppError> {
     if let Err(e) = payload.validate() {
-        return (StatusCode::BAD_REQUEST, Json(e)).into_response();
+        return Err(AppError::ValidationError(e.to_string()));
     }
 
     let todo = sqlx::query_as::<_, Todo>(
@@ -96,29 +137,36 @@ pub async fn update_todo(
     .bind(Utc::now())
     .bind(id)
     .fetch_one(&state.db_pool)
-    .await;
+    .await?;
 
-    match todo {
-        Ok(todo) => (StatusCode::OK, Json(todo)).into_response(),
-        Err(sqlx::Error::RowNotFound) => (StatusCode::NOT_FOUND).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
-    }
+    Ok((StatusCode::OK, Json(todo)))
 }
 
-pub async fn delete_todo(State(state): State<AppState>, Path(id): Path<Uuid>) -> impl IntoResponse {
+#[utoipa::path(
+    delete,
+    path = "/todos/{id}",
+    params(
+        ("id" = Uuid, Path, description = "Todo id")
+    ),
+    responses(
+        (status = 204, description = "Todo deleted successfully"),
+        (status = 404, description = "Todo not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    tag = "Todos"
+)]
+pub async fn delete_todo(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, AppError> {
     let result = sqlx::query("DELETE FROM todos WHERE id = $1")
         .bind(id)
         .execute(&state.db_pool)
-        .await;
+        .await?;
 
-    match result {
-        Ok(result) => {
-            if result.rows_affected() == 0 {
-                (StatusCode::NOT_FOUND).into_response()
-            } else {
-                (StatusCode::NO_CONTENT).into_response()
-            }
-        }
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("Todo not found".to_string()));
     }
+
+    Ok(StatusCode::NO_CONTENT)
 }
