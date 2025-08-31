@@ -30,7 +30,7 @@ impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
         match err {
             sqlx::Error::RowNotFound => AppError::NotFound("Record not found".to_string()),
-            _ => AppError::InternalServerError(format!("Database error: {}", err)),
+            _ => AppError::InternalServerError(format!("Database error: {err}")),
         }
     }
 }

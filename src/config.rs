@@ -26,7 +26,7 @@ impl AppConfig {
 
         let s = Config::builder()
             .add_source(File::with_name("config/default").required(true))
-            .add_source(File::with_name(&format!("config/{}", run_mode)).required(false))
+            .add_source(File::with_name(&format!("config/{run_mode}")).required(false))
             .add_source(Environment::with_prefix("app"))
             .build()?;
 
