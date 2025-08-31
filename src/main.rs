@@ -7,6 +7,9 @@ mod app_state;
 mod config;
 mod features;
 
+#[cfg(test)]
+mod tests;
+
 use features::{
     health::handler::health_check, todos::routes::todo_routes, users::routes::user_routes,
 };
