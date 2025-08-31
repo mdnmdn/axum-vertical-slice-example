@@ -12,7 +12,7 @@ async fn create_todo_returns_201_for_valid_data() {
     };
 
     let response = client
-        .post(&format!("{}/todos", &app.address))
+        .post(format!("{}/todos", &app.address))
         .json(&new_todo)
         .send()
         .await
@@ -22,7 +22,7 @@ async fn create_todo_returns_201_for_valid_data() {
 
     let saved = response.json::<Todo>().await.unwrap();
     assert_eq!(saved.title, "Test todo");
-    assert_eq!(saved.completed, false);
+    assert!(!saved.completed);
 }
 
 #[tokio::test]
@@ -35,14 +35,14 @@ async fn get_todos_returns_a_list_of_todos() {
         title: "Test todo".to_string(),
     };
     client
-        .post(&format!("{}/todos", &app.address))
+        .post(format!("{}/todos", &app.address))
         .json(&new_todo)
         .send()
         .await
         .expect("Failed to create todo.");
 
     let response = client
-        .get(&format!("{}/todos", &app.address))
+        .get(format!("{}/todos", &app.address))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -63,7 +63,7 @@ async fn get_todo_by_id_returns_correct_todo() {
         title: "Test todo".to_string(),
     };
     let response = client
-        .post(&format!("{}/todos", &app.address))
+        .post(format!("{}/todos", &app.address))
         .json(&new_todo)
         .send()
         .await
@@ -71,7 +71,7 @@ async fn get_todo_by_id_returns_correct_todo() {
     let created_todo = response.json::<Todo>().await.unwrap();
 
     let response = client
-        .get(&format!("{}/todos/{}", &app.address, created_todo.id))
+        .get(format!("{}/todos/{}", &app.address, created_todo.id))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -90,7 +90,7 @@ async fn update_todo_returns_200_for_valid_data() {
         title: "Test todo".to_string(),
     };
     let created_todo: Todo = client
-        .post(&format!("{}/todos", &app.address))
+        .post(format!("{}/todos", &app.address))
         .json(&new_todo)
         .send()
         .await
@@ -105,7 +105,7 @@ async fn update_todo_returns_200_for_valid_data() {
     };
 
     let response = client
-        .put(&format!("{}/todos/{}", &app.address, created_todo.id))
+        .put(format!("{}/todos/{}", &app.address, created_todo.id))
         .json(&update_data)
         .send()
         .await
@@ -115,7 +115,7 @@ async fn update_todo_returns_200_for_valid_data() {
 
     let updated_todo = response.json::<Todo>().await.unwrap();
     assert_eq!(updated_todo.title, "Updated todo");
-    assert_eq!(updated_todo.completed, true);
+    assert!(updated_todo.completed);
 }
 
 #[tokio::test]
@@ -127,7 +127,7 @@ async fn delete_todo_returns_204() {
         title: "Test todo".to_string(),
     };
     let created_todo: Todo = client
-        .post(&format!("{}/todos", &app.address))
+        .post(format!("{}/todos", &app.address))
         .json(&new_todo)
         .send()
         .await
@@ -137,7 +137,7 @@ async fn delete_todo_returns_204() {
         .unwrap();
 
     let response = client
-        .delete(&format!("{}/todos/{}", &app.address, created_todo.id))
+        .delete(format!("{}/todos/{}", &app.address, created_todo.id))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -145,7 +145,7 @@ async fn delete_todo_returns_204() {
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
 
     let get_response = client
-        .get(&format!("{}/todos/{}", &app.address, created_todo.id))
+        .get(format!("{}/todos/{}", &app.address, created_todo.id))
         .send()
         .await
         .expect("Failed to execute request.");
