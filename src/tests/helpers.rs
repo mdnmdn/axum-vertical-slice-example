@@ -8,14 +8,13 @@ use testcontainers_modules::testcontainers::runners::AsyncRunner;
 
 pub struct TestApp {
     pub address: String,
-    pub db_pool: PgPool,
 }
 
 pub async fn spawn_app() -> TestApp {
     let pg_image = Postgres::default();
     let postgres_container = pg_image.start().await.unwrap();
     let port = postgres_container.get_host_port_ipv4(5432).await.unwrap();
-    let database_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", port);
+    let database_url = format!("postgres://postgres:postgres@127.0.0.1:{port}/postgres");
 
     let mut config = AppConfig::new().unwrap();
     config.database_url = database_url;
@@ -25,7 +24,7 @@ pub async fn spawn_app() -> TestApp {
         .expect("Failed to connect to Postgres");
 
     let db_name = "test";
-    conn.execute(format!(r#"CREATE DATABASE "{}";"#, db_name).as_str())
+    conn.execute(format!(r#"CREATE DATABASE "{db_name}";"#).as_str())
         .await
         .expect("Failed to create database");
 
@@ -55,7 +54,7 @@ pub async fn spawn_app() -> TestApp {
         .await
         .unwrap();
     let addr = listener.local_addr().unwrap();
-    let server_addr = format!("http://{}", addr);
+    let server_addr = format!("http://{addr}");
 
     tokio::spawn(async move {
         axum::serve(listener, app).await.unwrap();
@@ -63,6 +62,5 @@ pub async fn spawn_app() -> TestApp {
 
     TestApp {
         address: server_addr,
-        db_pool,
     }
 }
