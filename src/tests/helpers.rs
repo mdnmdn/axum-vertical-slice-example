@@ -1,5 +1,5 @@
 use crate::app_state::AppState;
-use crate::config::AppConfig;
+use crate::config::{AppConfig, LogConfig, ServerConfig};
 use crate::features::{todos::routes::todo_routes, users::routes::user_routes};
 use axum::{routing::get, Router};
 use sqlx::{Connection, Executor, PgConnection, PgPool};
@@ -16,10 +16,18 @@ pub async fn spawn_app() -> TestApp {
     let port = postgres_container.get_host_port_ipv4(5432).await.unwrap();
     let database_url = format!("postgres://postgres:postgres@127.0.0.1:{port}/postgres");
 
-    let mut config = AppConfig::new().unwrap();
-    config.database_url = database_url;
+    let config = AppConfig {
+        server: ServerConfig {
+            port: 0,
+            host: "127.0.0.1".to_string(),
+        },
+        log: LogConfig {
+            level: "info".to_string(),
+        },
+        database_url: database_url.clone(),
+    };
 
-    let mut conn = PgConnection::connect(&config.database_url)
+    let mut conn = PgConnection::connect(&database_url)
         .await
         .expect("Failed to connect to Postgres");
 
@@ -29,6 +37,7 @@ pub async fn spawn_app() -> TestApp {
         .expect("Failed to create database");
 
     let database_url = format!("{}/{}", config.database_url, db_name);
+    let mut config = config;
     config.database_url = database_url;
 
     let db_pool = PgPool::connect(&config.database_url)
